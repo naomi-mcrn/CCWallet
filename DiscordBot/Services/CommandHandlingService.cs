@@ -17,6 +17,7 @@ namespace CCWallet.DiscordBot.Services
     {
         public bool Active => (Cancellation != null && !Cancellation.IsCancellationRequested);
 
+        private ConfigureService Configure { get; }
         private DiscordSocketClient Discord { get; }
         private IServiceProvider ServiceProvider { get; }
         private CancellationTokenSource Cancellation { get; set; }
@@ -36,10 +37,11 @@ namespace CCWallet.DiscordBot.Services
             public ICommandContext Context;
         }
 
-        public CommandHandlingService(DiscordSocketClient discord, IServiceProvider services)
+        public CommandHandlingService(DiscordSocketClient discord, IServiceProvider services, ConfigureService configure)
         {
             Discord = discord;
             ServiceProvider = services;
+            Configure = configure;
 
             Discord.Ready += OnReady;
             Discord.MessageReceived += OnMessageReceived;
@@ -225,13 +227,15 @@ namespace CCWallet.DiscordBot.Services
                     }
                     else
                     {
-                        RecentUsers.Add(arg.Id, arg.Author.Id);
+                        if (arg.Author.Id.ToString() != Configure.GetString("ADMIN_DISCORD_ID"))
+                        {
+                            RecentUsers.Add(arg.Id, arg.Author.Id);
+                        }                       
                         await result.Value.Context.Message.AddReactionAsync(BotReaction.InProgress);
 
                         if (!TryEnqueue(result.Value))
                         {
                             await result.Value.Context.Message.RemoveReactionAsync(BotReaction.InProgress, Discord.CurrentUser);
-                            await result.Value.Context.Message.AddReactionAsync(BotReaction.Error);
                         }
                     }
                 }
