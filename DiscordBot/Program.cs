@@ -55,11 +55,13 @@ namespace CCWallet.DiscordBot
         private static void SetupCommandHandlingService()
         {
             var command = ServiceProvider.GetRequiredService<Services.CommandHandlingService>();
+            var config = ServiceProvider.GetRequiredService<Services.ConfigureService>();
+            var prefix = config.GetString("COMMAND_PREFIX","!");
 
             Task.WaitAll(new[]
             {
-                command.AddCommandService("!xp").AddModuleAsync<Modules.XPCoinModule>(),
-                command.AddCommandService("!ccwallet").AddModuleAsync<Modules.CCWalletModule>(),
+                command.AddCommandService(prefix + "xp").AddModuleAsync<Modules.XPCoinModule>(),
+                command.AddCommandService(prefix + "ccwallet").AddModuleAsync<Modules.CCWalletModule>(),
             });
         }
 
